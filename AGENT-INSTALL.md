@@ -36,21 +36,32 @@ cd dsh-linux-profile
 
 ```bash
 bash install.sh --dry-run          # 先看它要做什么，不写任何文件
-bash install.sh                    # 正式安装到 profile "web"
+bash install.sh --yes              # 正式安装（自动选择 web / desktop profile）
 ```
 
-桌面版用户：
+脚本会自己决定安装方式：有 `dsh` 命令就用 `dsh plugin install`，
+没有（或桌面版拒绝管理 desktop profile）就在 profile 目录里直接 `pnpm install`。
+**不要**为了让脚本"跑通"而加 `--no-install`——那只会写配置、不装插件，
+结果就是界面里连插件市场都没有。
+
+仅当用户明确表示"先只写配置"时才用：
 
 ```bash
-bash install.sh --profile desktop
+bash install.sh --no-install
 ```
 
 ## 4. 验证（三条都要通过）
 
 ```bash
+bash doctor.sh                                      # 体检：路径、profile、每个依赖是否落地
 dsh --profile web --dump-config > /tmp/dsh-ok.yml   # 退出码 0，且无报错
 grep -c 'id:' /tmp/dsh-ok.yml                        # 配置层已合并
-dsh web                                              # 能启动，浏览器可打开
+```
+
+没有 `dsh` 命令时，至少确认目标 profile 的 `node_modules` 里存在 `dshmarket`：
+
+```bash
+ls ~/.dsh/profiles/*/node_modules/dshmarket/package.json
 ```
 
 `dsh web` 会前台占用终端；确认能访问后 `Ctrl+C` 即可，不算失败。

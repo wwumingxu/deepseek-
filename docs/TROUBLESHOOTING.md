@@ -1,5 +1,42 @@
 # 常见问题排查
 
+> 先跑一次体检，大部分问题从输出就能直接看出：
+>
+> ```bash
+> bash doctor.sh
+> ```
+
+## 0. 装完了，但界面里没有插件市场 / 插件没出现
+
+**三种典型原因，按顺序排查：**
+
+1. **装到了另一个 profile**
+   桌面版只读 `~/.dsh/profiles/desktop`，命令行 `dsh web` 只读 `~/.dsh/profiles/web`。
+   装错时界面当然看不到。确认目标：
+   ```bash
+   ls ~/.dsh/profiles/          # 有 desktop 就说明你用的是桌面版
+   bash install.sh              # 不带参数会自动选中 desktop
+   ```
+2. **`dsh` 不在 PATH，安装被跳过**
+   旧版脚本遇到这种情况只告警。现在会**直接报错退出**；如果用的是旧脚本，
+   检查该 profile 下有没有 `node_modules`：
+   ```bash
+   ls ~/.dsh/profiles/desktop/node_modules | head
+   ```
+   没有就重跑新版 `install.sh`，或手动装：
+   ```bash
+   cd ~/.dsh/profiles/desktop && pnpm install
+   ```
+3. **启用顺序问题**：`package.json` 的 `dsh.profile.bundles` 必须包含 `dshmarket`，
+   缺了它插件市场就不会加载。检查：
+   ```bash
+   grep -A20 '"profile"' ~/.dsh/profiles/desktop/package.json | grep dshmarket
+   ```
+
+修好后完全退出应用再打开。仍不行就 `bash doctor.sh` 把输出贴出来。
+
+---
+
 ## 1. Node 版本过低
 
 **现象**
@@ -48,6 +85,9 @@ export NVM_DIR="$HOME/.nvm"
 ```bash
 npm install -g @deepseek-ai/dsh
 ```
+
+> `install.sh` 已经会自动搜索桌面版自带的 `resources/runtime/cli/bin/dsh`，
+> 并且在没有 `dsh` 时退回 `pnpm install`，所以这条一般只影响你手动敲命令。
 
 ---
 
@@ -163,8 +203,9 @@ Open DeepSeek Harness Desktop once to initialize its profile, then fully quit it
 
 1. 先启动一次 Linux 桌面版 DSH，让它初始化 `~/.dsh/profiles/desktop`；
 2. **完全退出**桌面版（不是最小化到托盘）；
-3. 使用桌面版自带的 `dsh` 命令执行安装；
-4. 若终端里没有该命令，改用 `--no-install` 写配置，再在桌面版「设置 → 插件」里手动安装。
+3. 直接跑新版 `bash install.sh`：它会自动找到桌面版自带 CLI，若 CLI 拒绝管理
+   desktop 则退回在该目录里 `pnpm install`，两者都不需要你手动指定；
+4. 极端情况下（既没 CLI 也没 pnpm）才用 `--no-install` 写配置，再在界面里手动装。
 
 ---
 

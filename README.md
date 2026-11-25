@@ -77,7 +77,7 @@ dsh --version
 
 ---
 
-## 三、快速开始（命令行 / Web 版，推荐）
+## 三、快速开始
 
 ```bash
 git clone https://github.com/wwumingxu/deepseek-.git dsh-linux-profile
@@ -86,72 +86,68 @@ cd dsh-linux-profile
 # 预览将要执行的操作（不写文件）
 bash install.sh --dry-run
 
-# 正式安装：默认写入 web profile
+# 正式安装
 bash install.sh
 
-# 启动
+# 命令行 / Web 版启动
 dsh web
 ```
 
-`install.sh` 默认安装到 `~/.dsh/profiles/web`，启动后浏览器打开 `dsh web` 输出的地址即可。
+**装到哪个 profile**：不指定 `--profile` 时自动判断——本机已存在
+`~/.dsh/profiles/desktop/package.json`（装过桌面版并启动过）就装 `desktop`，
+否则装 `web`。想强制指定就加 `--profile web` / `--profile desktop`。
+
+**用什么装**：优先 `dsh plugin --profile <名字> install`；找不到 `dsh` 命令、
+或桌面版拒绝命令行管理该 profile 时，自动退回在该 profile 目录里直接
+`pnpm install`（DSH 的插件安装本来就是 pnpm）。两者都没有会**直接报错退出**，
+不会出现「跳过安装却显示安装完成」的情况。
 
 ### 脚本做了什么
 
-1. 检查 `dsh` / `node` / `pnpm` 是否可用，并在 Node < 24.9 时告警；
+1. 找 `dsh`（先看 PATH，再搜桌面版自带的 `resources/runtime/cli/bin/dsh`），检查 node / pnpm；
 2. 把目标 profile 的现有配置备份到 `.migration-backup-<时间戳>/`；
 3. 写入 `package.json`（12 个 bundle）、`cordis.patch.yml`、`cordis.yml`、`pnpm-workspace.yaml`；
-4. 删除旧的 `pnpm-lock.yaml`，执行 `dsh plugin --profile web install`（内部调用 pnpm）；
-5. 用 `dsh --profile web --dump-config` 校验配置树能否正确组合。
+4. 删除旧的 `pnpm-lock.yaml`，安装依赖（`dsh plugin` 或直接 `pnpm install`）；
+5. 校验：逐个确认依赖真的落在 `node_modules`，再用 `--dump-config` 验证配置树。
 
 ### 常用参数
 
 ```bash
-bash install.sh --profile web          # 指定 profile（默认 web）
+bash install.sh --profile web          # 指定 profile（默认自动检测）
 bash install.sh --dsh-home /data/.dsh  # 自定义 DSH_HOME
 bash install.sh --no-install           # 只写配置，不装依赖
 bash install.sh -y                     # 跳过确认
 bash install.sh --dry-run              # 只打印计划
+bash doctor.sh                         # 体检：打印 profile、依赖、dump-config 状态
 ```
 
 ---
 
 ## 四、Linux 桌面版用户
 
-桌面版使用保留 profile `desktop`，且**必须由桌面版应用初始化**。
+桌面版使用保留 profile `desktop`，需要先让它自己初始化一次。
 
 ```bash
-# 1. 先启动一次 Linux 桌面版 DSH，等它把 ~/.dsh/profiles/desktop 建好，然后完全退出
-# 2. 确认桌面版自带的 dsh 命令可用
-dsh --version
-
-# 3. 迁移到 desktop profile
-bash install.sh --profile desktop
+# 1. 启动一次 Linux 桌面版 DSH，确认 ~/.dsh/profiles/desktop 已生成，然后完全退出
+# 2. 安装（不带 --profile 也会自动选中 desktop）
+bash install.sh
 ```
 
-如果终端里没有 `dsh` 命令（桌面版未把 CLI 暴露到 PATH），先找一下桌面版自带的那个：
+桌面版一般不会把 `dsh` 暴露到 PATH。脚本会自动搜索安装目录下的
+`resources/runtime/cli/bin/dsh`；找不到就退回 `pnpm install` 直接装进 profile 目录——
+效果是一样的，界面里的插件就是从 profile 的 `node_modules` 里加载的。
+
+装完打开桌面版 → **设置 → 插件**，应能看到「插件市场 dshmarket」等 12 个插件。
+如果还是看不到，运行体检脚本并把输出贴出来：
 
 ```bash
-sudo find / -path '*resources/runtime/cli/bin/dsh' -type f 2>/dev/null
+bash doctor.sh
 ```
 
-找到后可以直接用绝对路径执行，或临时加进 PATH：
+它会打印：找到的 dsh 路径、所有 profile、每个依赖是否真的落地、`dump-config` 是否通过。
+据此就能判断是「装到了另一个 profile」还是「依赖没装上」。
 
-```bash
-export DSH_CLI="/opt/DeepSeek Harness/resources/runtime/cli/bin/dsh"   # 换成上一步的路径
-"$DSH_CLI" --version
-"$DSH_CLI" plugin --profile desktop install
-```
-
-实在找不到，就只写配置，再到界面里手动装插件：
-
-```bash
-# 只写配置，不执行安装
-bash install.sh --profile desktop --no-install
-```
-
-然后打开桌面版 → **设置 → 插件**，按[第五节](#五插件清单)的清单安装 12 个插件（版本号保持一致）。配置文件已在 `~/.dsh/profiles/desktop/` 下就位，插件装完后重启应用即生效。
-
-> 桌面版运行时无法从外部改写它的 profile，安装/回滚前请**完全退出** DSH 桌面版。
+> 桌面版运行时不要同时开着：安装/回滚前请**完全退出** DSH 桌面版，避免它覆盖配置。
 
 ---
 
@@ -231,6 +227,7 @@ autoTunnel: true   # 自动建立公网隧道
 .
 ├── install.sh                    # 一键安装
 ├── rollback.sh                   # 一键回滚
+├── doctor.sh                     # 体检：profile / 依赖 / dump-config 状态
 ├── AGENT-INSTALL.md              # 交给 Linux 上 DSH Agent 执行的说明书
 ├── profile/                      # 从 Windows 导出的配置（可直接对照修改）
 │   ├── package.json              # 插件依赖 + bundle 顺序
