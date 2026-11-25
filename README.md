@@ -31,6 +31,9 @@
 
 > 迁移的是「配置」，不是「运行环境」。Linux 上 DSH 本体、插件依赖都需要重新安装一次。
 
+> 如果你打算让 Linux 上的 DSH Agent 自己完成安装，直接把仓库地址丢给它，并让它先读
+> [`AGENT-INSTALL.md`](AGENT-INSTALL.md)（一份面向 Agent 的短说明书，含硬约束与验证步骤）。
+
 ---
 
 ## 二、前置要求
@@ -228,6 +231,7 @@ autoTunnel: true   # 自动建立公网隧道
 .
 ├── install.sh                    # 一键安装
 ├── rollback.sh                   # 一键回滚
+├── AGENT-INSTALL.md              # 交给 Linux 上 DSH Agent 执行的说明书
 ├── profile/                      # 从 Windows 导出的配置（可直接对照修改）
 │   ├── package.json              # 插件依赖 + bundle 顺序
 │   ├── cordis.patch.yml          # 个性化设置
