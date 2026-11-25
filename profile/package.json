@@ -1,0 +1,34 @@
+{
+  "name": "dsh-profile-linux",
+  "private": true,
+  "dependencies": {
+    "@dougen/dsh-deepseek-usage": "0.20.0",
+    "@linxin666/dsh-client-ui-skill-explorer": "0.4.18",
+    "@linxin666/dsh-remote-web-ui": "0.4.18",
+    "@linxin666/dsh-ssh": "0.4.18",
+    "@liustack/modlens": "3.27.3",
+    "@vectorize-io/hindsight-coding-agents": "0.8.7",
+    "@weibaohui/dsh-sync": "0.4.11",
+    "billion-context": "0.1.216",
+    "dsh-better-sidebar": "0.32.1",
+    "dshmarket": "1.73.19"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dshmarket",
+        "@vectorize-io/hindsight-coding-agents",
+        "@liustack/modlens",
+        "@linxin666/dsh-remote-web-ui",
+        "@linxin666/dsh-client-ui-skill-explorer",
+        "dsh-better-sidebar",
+        "@linxin666/dsh-ssh",
+        "@weibaohui/dsh-sync",
+        "billion-context",
+        "@dougen/dsh-deepseek-usage"
+      ]
+    }
+  }
+}

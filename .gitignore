@@ -1,0 +1,22 @@
+# 依赖与运行时产物
+node_modules/
+.pnpm-store/
+
+# 备份与临时文件
+.migration-backup-*/
+*.bak
+*.orig
+*.log
+.dump-config.err
+
+# 敏感信息（永远不要提交）
+.credentials.yaml
+credentials*.yml
+*.env
+.env*
+*.key
+*.pem
+
+# 系统杂项
+.DS_Store
+Thumbs.db
